@@ -1,0 +1,104 @@
+plugins {
+    id "com.jfrog.bintray" version "1.7"
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+
+group 'net.kr9ly'
+version '1.0.0'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.0"
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_6
+        targetCompatibility JavaVersion.VERSION_1_6
+    }
+}
+
+
+def releaseJarName = "rx-property-${version}.jar"
+
+task unpackJar(type: Copy, dependsOn: assemble) {
+    from zipTree("${project.buildDir}/intermediates/bundles/release/classes.jar")
+    into "${project.buildDir}/tmp/jar"
+}
+
+task packJar(type: Zip, dependsOn: unpackJar) {
+    from fileTree("${project.buildDir}/tmp/jar")
+    exclude '**/BuildConfig.class'
+    archiveName releaseJarName
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+bintray {
+    user = 'kr9ly'
+    key = setting_bintray_apikey
+    publications = ['rxproperty']
+    pkg {
+        repo = 'maven'
+        name = 'rx-property'
+        userOrg = 'kr9ly'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/kr9ly/rx-property.git'
+    }
+}
+
+
+publishing {
+    publications {
+        rxproperty(MavenPublication) {
+            groupId group
+            artifactId 'rx-property'
+            artifact source: file("${project.buildDir}/distributions/${releaseJarName}"), builtBy: packJar
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+
+    repositories {
+        maven {
+            url file("${project.buildDir}/.m2/repository")
+        }
+    }
+}
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+    testCompile 'io.reactivex:rxjava:1.1.6'
+    provided 'io.reactivex:rxjava:1.1.6'
+}
