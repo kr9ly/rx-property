@@ -1,21 +1,20 @@
 package net.kr9ly.rxproperty;
 
-import android.databinding.ObservableField;
+import android.databinding.Observable;
 
 import rx.Observer;
-import rx.functions.Action1;
 import rx.subjects.BehaviorSubject;
 import rx.subjects.Subject;
 
 /**
  * Copyright 2016 kr9ly
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +23,7 @@ import rx.subjects.Subject;
  */
 public class RxField<V> {
 
-    private ObservableField<V> field;
+    private SimpleObservable<V> field = new SimpleObservable<V>();
 
     private Subject<V, V> subject = BehaviorSubject.create();
 
@@ -33,14 +32,8 @@ public class RxField<V> {
     }
 
     public RxField(V initialValue) {
-        this.field = new ObservableField<V>();
         subject = BehaviorSubject.create(initialValue);
-        subject.subscribe(new Action1<V>() {
-            @Override
-            public void call(V v) {
-                field.set(v);
-            }
-        });
+        subject.subscribe(field);
     }
 
     public Observer<V> asObserver() {
@@ -48,7 +41,7 @@ public class RxField<V> {
     }
 
     @Deprecated
-    public ObservableField<V> getValue() {
+    public SimpleObservable<V> getValue() {
         return field;
     }
 }

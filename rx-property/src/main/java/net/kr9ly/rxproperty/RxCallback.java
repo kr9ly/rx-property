@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 import rx.Observable;
+import rx.subjects.BehaviorSubject;
 import rx.subjects.PublishSubject;
 import rx.subjects.Subject;
 
@@ -25,13 +26,18 @@ import rx.subjects.Subject;
  */
 public class RxCallback<T, V> {
 
-    private Func<T, V> func;
+    private final Func<T, V> func;
 
-    private Object proxy;
+    private final Object proxy;
 
-    private Subject<V, V> subject = PublishSubject.create();
+    private final Subject<V, V> subject;
 
     public RxCallback(Func<T, V> adapterFunc, Class<T> bridgeClass) {
+        this(adapterFunc, bridgeClass, BehaviorSubject.<V>create());
+    }
+
+    public RxCallback(Func<T, V> adapterFunc, Class<T> bridgeClass, Subject<V, V> subject) {
+        this.subject = subject;
         this.func = adapterFunc;
         proxy = Proxy.newProxyInstance(bridgeClass.getClassLoader(), new Class[]{bridgeClass}, new IHandler());
     }
@@ -51,13 +57,10 @@ public class RxCallback<T, V> {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             VContainer<V> container = new VContainer<V>();
-            Object result = null;
-            if (func != null) {
-                T call = func.call(container);
-                result = method.invoke(call, args);
+            T call = func.call(container);
+            Object result = method.invoke(call, args);
+            if (container.updated) {
                 subject.onNext(container.value);
-            } else {
-                subject.onNext(null);
             }
             return result;
         }
@@ -69,10 +72,13 @@ public class RxCallback<T, V> {
 
     public static class VContainer<V> {
 
+        private boolean updated;
+
         private V value;
 
         public void resolve(V value) {
             this.value = value;
+            updated = true;
         }
     }
 }
