@@ -1,7 +1,5 @@
 package net.kr9ly.rxproperty;
 
-import android.databinding.Observable;
-
 import rx.Observer;
 import rx.subjects.BehaviorSubject;
 import rx.subjects.Subject;

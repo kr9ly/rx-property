@@ -1,20 +1,19 @@
 package net.kr9ly.rxproperty;
 
-import android.databinding.BaseObservable;
+import android.databinding.ObservableField;
 
 import rx.Observer;
 
-public class SimpleObservable<T> extends BaseObservable implements Observer<T> {
+public class SimpleObservable<T> extends ObservableField<T> implements Observer<T> {
 
     private T value;
 
-    public T get() {
-        return value;
-    }
-
     public void set(T value) {
+        super.set(value);
+        if (this.value == value) {
+            notifyChange();
+        }
         this.value = value;
-        notifyChange();
     }
 
     @Override

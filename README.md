@@ -13,7 +13,7 @@ jcenter()
 And Add this to `dependencies` block in your build.gradle
 
 ```
-compile 'net.kr9ly:rx-property:1.1.0'
+compile 'net.kr9ly:rx-property:1.2.0'
 ```
 
 ### Usage
